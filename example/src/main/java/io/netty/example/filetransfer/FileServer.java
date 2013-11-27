@@ -42,79 +42,79 @@ import java.io.FileInputStream;
  */
 public class FileServer {
 
-	private final int port;
+    private final int port;
 
-	public FileServer(int port) {
-		this.port = port;
-	}
+    public FileServer(int port) {
+        this.port = port;
+    }
 
-	public void run() throws Exception {
-		// Configure the server.
-		EventLoopGroup bossGroup = new NioEventLoopGroup();
-		EventLoopGroup workerGroup = new NioEventLoopGroup();
-		try {
-			ServerBootstrap b = new ServerBootstrap();
-			b.group(bossGroup, workerGroup)
-				.channel(NioServerSocketChannel.class)
-				.option(ChannelOption.SO_BACKLOG, 100)
-				.handler(new LoggingHandler(LogLevel.INFO))
-				.childHandler(new ChannelInitializer<SocketChannel>() {
-					@Override
-					public void initChannel(SocketChannel ch) throws Exception {
-						ch.pipeline().addLast(
-							new StringEncoder(CharsetUtil.UTF_8),
-							new LineBasedFrameDecoder(8192),
-							new StringDecoder(CharsetUtil.UTF_8),
-							new FileHandler());
-					}
-				});
+    public void run() throws Exception {
+        // Configure the server.
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        try {
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(bossGroup, workerGroup)
+             .channel(NioServerSocketChannel.class)
+             .option(ChannelOption.SO_BACKLOG, 100)
+             .handler(new LoggingHandler(LogLevel.INFO))
+             .childHandler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 public void initChannel(SocketChannel ch) throws Exception {
+                     ch.pipeline().addLast(
+                             new StringEncoder(CharsetUtil.UTF_8),
+                             new LineBasedFrameDecoder(8192),
+                             new StringDecoder(CharsetUtil.UTF_8),
+                             new FileHandler());
+                 }
+             });
 
-			// Start the server.
-			ChannelFuture f = b.bind(port).sync();
+            // Start the server.
+            ChannelFuture f = b.bind(port).sync();
 
-			// Wait until the server socket is closed.
-			f.channel().closeFuture().sync();
-		} finally {
-			// Shut down all event loops to terminate all threads.
-			bossGroup.shutdownGracefully();
-			workerGroup.shutdownGracefully();
-		}
-	}
+            // Wait until the server socket is closed.
+            f.channel().closeFuture().sync();
+        } finally {
+            // Shut down all event loops to terminate all threads.
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+        }
+    }
 
-	public static void main(String[] args) throws Exception {
-		int port;
-		if (args.length > 0) {
-			port = Integer.parseInt(args[0]);
-		} else {
-			port = 8080;
-		}
-		new FileServer(port).run();
-	}
+    public static void main(String[] args) throws Exception {
+        int port;
+        if (args.length > 0) {
+            port = Integer.parseInt(args[0]);
+        } else {
+            port = 8080;
+        }
+        new FileServer(port).run();
+    }
 
-	private static final class FileHandler extends SimpleChannelInboundHandler<String> {
-		@Override
-		public void messageReceived(ChannelHandlerContext ctx, String msg) throws Exception {
-			File file = new File(msg);
-			if (file.exists()) {
-				if (!file.isFile()) {
-					ctx.writeAndFlush("Not a file: " + file + '\n');
-					return;
-				}
-				ctx.write(file + " " + file.length() + '\n');
-				FileInputStream fis = new FileInputStream(file);
-				FileRegion region = new DefaultFileRegion(fis.getChannel(), 0, file.length());
-				ctx.write(region);
-				ctx.writeAndFlush("\n");
-				fis.close();
-			} else {
-				ctx.writeAndFlush("File not found: " + file + '\n');
-			}
-		}
+    private static final class FileHandler extends SimpleChannelInboundHandler<String> {
+        @Override
+        public void messageReceived(ChannelHandlerContext ctx, String msg) throws Exception {
+            File file = new File(msg);
+            if (file.exists()) {
+                if (!file.isFile()) {
+                    ctx.writeAndFlush("Not a file: " + file + '\n');
+                    return;
+                }
+                ctx.write(file + " " + file.length() + '\n');
+                FileInputStream fis = new FileInputStream(file);
+                FileRegion region = new DefaultFileRegion(fis.getChannel(), 0, file.length());
+                ctx.write(region);
+                ctx.writeAndFlush("\n");
+                fis.close();
+            } else {
+                ctx.writeAndFlush("File not found: " + file + '\n');
+            }
+        }
 
-		@Override
-		public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-			cause.printStackTrace();
-			ctx.close();
-		}
-	}
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+            cause.printStackTrace();
+            ctx.close();
+        }
+    }
 }

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 package io.netty.example.http.file;
 
 import io.netty.buffer.ByteBuf;
@@ -99,7 +114,8 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+    public void messageReceived(
+            ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
         if (!request.getDecoderResult().isSuccess()) {
             sendError(ctx, BAD_REQUEST);
             return;
@@ -118,7 +134,6 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         }
 
         File file = new File(path);
-        System.out.println("path : " + path);
         if (file.isHidden() || !file.exists()) {
             sendError(ctx, NOT_FOUND);
             return;
@@ -177,9 +192,11 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         // Write the content.
         ChannelFuture sendFileFuture;
         if (useSendFile) {
-            sendFileFuture = ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
+            sendFileFuture =
+                    ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
         } else {
-            sendFileFuture = ctx.write(new ChunkedFile(raf, 0, fileLength, 8192), ctx.newProgressivePromise());
+            sendFileFuture =
+                    ctx.write(new ChunkedFile(raf, 0, fileLength, 8192), ctx.newProgressivePromise());
         }
 
         sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
@@ -363,7 +380,8 @@ public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<Ful
         time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
         response.headers().set(EXPIRES, dateFormatter.format(time.getTime()));
         response.headers().set(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
-        response.headers().set(LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
+        response.headers().set(
+                LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
     }
 
     /**

@@ -546,16 +546,14 @@ public abstract class HttpHeaders implements Iterable<Map.Entry<String, String>>
      */
     public static boolean isKeepAlive(HttpMessage message) {
         String connection = message.headers().get(Names.CONNECTION);
-
-        boolean close = Values.CLOSE.equalsIgnoreCase(connection);
-        if (close) {
+        if (connection != null && equalsIgnoreCase(Values.CLOSE, connection)) {
             return false;
         }
 
         if (message.getProtocolVersion().isKeepAliveDefault()) {
-            return !close;
+            return !equalsIgnoreCase(Values.CLOSE, connection);
         } else {
-            return Values.KEEP_ALIVE.equalsIgnoreCase(connection);
+            return equalsIgnoreCase(Values.KEEP_ALIVE, connection);
         }
     }
 
@@ -975,7 +973,7 @@ public abstract class HttpHeaders implements Iterable<Map.Entry<String, String>>
         if (value == null) {
             return false;
         }
-        if (Values.CONTINUE.equalsIgnoreCase(value)) {
+        if (equalsIgnoreCase(Values.CONTINUE, value)) {
             return true;
         }
 
@@ -1021,24 +1019,21 @@ public abstract class HttpHeaders implements Iterable<Map.Entry<String, String>>
         for (int index = 0; index < headerName.length(); index ++) {
             //Actually get the character
             char character = headerName.charAt(index);
-            valideHeaderNameChar(character);
-        }
-    }
 
-    static void valideHeaderNameChar(char c) {
-        //Check to see if the character is not an ASCII character
-        if (c > 127) {
-            throw new IllegalArgumentException(
-                    "Header name cannot contain non-ASCII characters: " + c);
-        }
-
-        //Check for prohibited characters.
-        switch (c) {
-            case '\t': case '\n': case 0x0b: case '\f': case '\r':
-            case ' ':  case ',':  case ':':  case ';':  case '=':
+            //Check to see if the character is not an ASCII character
+            if (character > 127) {
                 throw new IllegalArgumentException(
-                        "Header name cannot contain the following prohibited characters: " +
-                                "=,;: \\t\\r\\n\\v\\f ");
+                        "Header name cannot contain non-ASCII characters: " + headerName);
+            }
+
+            //Check for prohibited characters.
+            switch (character) {
+                case '\t': case '\n': case 0x0b: case '\f': case '\r':
+                case ' ':  case ',':  case ':':  case ';':  case '=':
+                    throw new IllegalArgumentException(
+                            "Header name cannot contain the following prohibited characters: " +
+                                    "=,;: \\t\\r\\n\\v\\f: " + headerName);
+            }
         }
     }
 
@@ -1137,7 +1132,7 @@ public abstract class HttpHeaders implements Iterable<Map.Entry<String, String>>
         Iterator<String> valuesIt = values.iterator();
         while (valuesIt.hasNext()) {
             String value = valuesIt.next();
-            if (value.equalsIgnoreCase(Values.CHUNKED)) {
+            if (equalsIgnoreCase(value, Values.CHUNKED)) {
                 valuesIt.remove();
             }
         }
@@ -1157,6 +1152,37 @@ public abstract class HttpHeaders implements Iterable<Map.Entry<String, String>>
         return m.headers().contains(Names.CONTENT_LENGTH);
     }
 
+    /**
+     * Returns {@code true} if both {@link CharSequence}'s are equals when ignore the case.
+     * This only supports US_ASCII.
+     */
+    public static boolean equalsIgnoreCase(CharSequence name1, CharSequence name2) {
+        if (name1 == name2) {
+            return true;
+        }
+
+        int nameLen = name1.length();
+        if (nameLen != name2.length()) {
+            return false;
+        }
+
+        for (int i = nameLen - 1; i >= 0; i --) {
+            char c1 = name1.charAt(i);
+            char c2 = name2.charAt(i);
+            if (c1 != c2) {
+                if (c1 >= 'A' && c1 <= 'Z') {
+                    c1 += 32;
+                }
+                if (c2 >= 'A' && c2 <= 'Z') {
+                    c2 += 32;
+                }
+                if (c1 != c2) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     protected HttpHeaders() { }
 
     /**
@@ -1337,7 +1363,7 @@ public abstract class HttpHeaders implements Iterable<Map.Entry<String, String>>
 
         for (String v: values) {
             if (ignoreCaseValue) {
-                if (v.equalsIgnoreCase(value)) {
+                if (equalsIgnoreCase(v, value)) {
                     return true;
                 }
             } else {

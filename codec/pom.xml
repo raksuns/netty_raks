@@ -24,7 +24,7 @@
   </parent>
 
   <artifactId>netty-codec</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <name>Netty/Codec</name>
 

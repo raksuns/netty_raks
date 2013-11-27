@@ -30,7 +30,8 @@ import java.util.logging.Logger;
  */
 public class EchoClientHandler extends ChannelInboundHandlerAdapter {
 
-    private static final Logger logger = Logger.getLogger(EchoClientHandler.class.getName());
+    private static final Logger logger = Logger.getLogger(
+            EchoClientHandler.class.getName());
 
     private final ByteBuf firstMessage;
 

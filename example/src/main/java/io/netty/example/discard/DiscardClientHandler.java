@@ -29,7 +29,8 @@ import java.util.logging.Logger;
  */
 public class DiscardClientHandler extends SimpleChannelInboundHandler<Object> {
 
-    private static final Logger logger = Logger.getLogger(DiscardClientHandler.class.getName());
+    private static final Logger logger = Logger.getLogger(
+            DiscardClientHandler.class.getName());
 
     private final int messageSize;
     private ByteBuf content;
@@ -37,7 +38,8 @@ public class DiscardClientHandler extends SimpleChannelInboundHandler<Object> {
 
     public DiscardClientHandler(int messageSize) {
         if (messageSize <= 0) {
-            throw new IllegalArgumentException("messageSize: " + messageSize);
+            throw new IllegalArgumentException(
+                    "messageSize: " + messageSize);
         }
         this.messageSize = messageSize;
     }
