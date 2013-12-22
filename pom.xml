@@ -97,6 +97,7 @@
     <module>transport-udt</module>
     <module>handler</module>
     <module>example</module>
+    <module>netty-child</module>
     <module>testsuite</module>
     <module>microbench</module>
     <module>all</module>
